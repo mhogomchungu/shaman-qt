@@ -43,46 +43,25 @@ const char * appName = "shaman-qt" ;
 #if USE_KDE_STATUS_NOTIFIER
 #include <kstandarddirs.h>
 
-static QString _getShamanCmd( void )
+static QString _getConfigPath( void )
 {
 	KStandardDirs k ;
-
-	QSettings settings( appName,appName ) ;
-	settings.setPath( QSettings::IniFormat,QSettings::UserScope,k.localxdgconfdir() ) ;
-
-	QString opt = "command" ;
-
-	if( settings.contains( opt ) ){
-		return settings.value( opt ).toString() ;
-	}else{
-		settings.setValue( opt,QString( cmd ) ) ;
-		return cmd ;
-	}
-}
-
-static int _getUpdateInterval( void )
-{
-	KStandardDirs k ;
-
-	QSettings settings( appName,appName ) ;
-	settings.setPath( QSettings::IniFormat,QSettings::UserScope,k.localxdgconfdir() ) ;
-
-	QString opt = "updateInterval" ;
-
-	if( settings.contains( opt ) ){
-		return settings.value( opt ).toInt() ;
-	}else{
-		settings.setValue( opt,QString( updateInterval ) ) ;
-		return QString( updateInterval ).toInt() ;
-	}
+	return k.localxdgconfdir() ;
 }
 
 #else
 
+static QString _getConfigPath( void )
+{
+	return QDir::homePath() + "/.config" ;
+}
+
+#endif
+
 static QString _getShamanCmd( void )
 {
 	QSettings settings( appName,appName ) ;
-	settings.setPath( QSettings::IniFormat,QSettings::UserScope,QDir::homePath() + "/.config" ) ;
+	settings.setPath( QSettings::IniFormat,QSettings::UserScope,_getConfigPath() ) ;
 
 	QString opt = "command" ;
 
@@ -97,7 +76,7 @@ static QString _getShamanCmd( void )
 static int _getUpdateInterval( void )
 {
 	QSettings settings( appName,appName ) ;
-	settings.setPath( QSettings::IniFormat,QSettings::UserScope,QDir::homePath() + "/.config" ) ;
+	settings.setPath( QSettings::IniFormat,QSettings::UserScope,_getConfigPath() ) ;
 
 	QString opt = "updateInterval" ;
 
@@ -108,8 +87,6 @@ static int _getUpdateInterval( void )
 		return QString( updateInterval ).toInt() ;
 	}
 }
-
-#endif
 
 struct weatherInfo
 {
