@@ -30,7 +30,7 @@
 #include <QDir>
 #include <QSettings>
 
-const char * cmd = "shaman -l Syracuse,US -i --format \"%I,%j\\011temp: %t\\011low: %h\\011high: %H\\011%c\"" ;
+const char * cmd = "shaman -l Syracuse,US -i --format \"%I,%j\\011temp: %t\\011low: %h F\\011high: %H F\\011%c\"" ;
 
 const char * updateInterval = "20" ;
 
