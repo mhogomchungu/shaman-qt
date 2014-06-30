@@ -29,6 +29,7 @@
 #include <QStringList>
 #include <QDir>
 #include <QSettings>
+#include <QCoreApplication>
 
 const char * cmd = "shaman -l Syracuse,US -i --format \"%I,%j\\011temp: %t F\\011low: %h F\\011high: %H F\\011%c\"" ;
 
@@ -161,7 +162,7 @@ void shaman::updateInfo()
 
 			table += "</table>" ;
 
-			statusicon::setToolTip( icon,"status",table ) ;
+			statusicon::setToolTip( icon,tr( "status" ),table ) ;
 		}else{
 			statusicon::setToolTip( icon,tr( "error" ),tr( "failed to fetch data" ) ) ;
 		}
