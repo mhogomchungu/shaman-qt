@@ -170,7 +170,7 @@ void shaman::run()
 
 	auto t = new QTimer( this ) ;
 	connect( t,SIGNAL( timeout() ),this,SLOT( updateInfo() ) ) ;
-	t->start( 1000 * _getUpdateInterval() ) ;
+	t->start( 1000 * 60 * _getUpdateInterval() ) ;
 
 	this->updateInfo() ;
 }
