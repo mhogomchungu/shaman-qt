@@ -113,30 +113,9 @@ static int _getUpdateInterval( void )
 
 struct weatherInfo
 {
-	bool success( void ) const
-	{
-		return exitCode == 0 ;
-	}
-	int  exitCode ;
-	bool completed ;
+	bool success ;
 	QString outPut ;
 };
-
-weatherInfo getWeatherInfo()
-{
-	weatherInfo w ;
-	QProcess p ;
-	p.start( _getShamanCmd() ) ;
-	w.completed = p.waitForFinished() ;
-	if( w.completed ){
-		w.exitCode   = p.exitCode() ;
-		w.outPut     = p.readAll() ;
-	}else{
-		w.exitCode = 1 ;
-	}
-
-	return w ;
-}
 
 shaman::shaman()
 {
@@ -175,12 +154,24 @@ void shaman::updateInfo()
 {
 	auto _a = [](){
 
-		return getWeatherInfo() ;
+		weatherInfo w ;
+
+		QProcess p ;
+		p.start( _getShamanCmd() ) ;
+
+		if( p.waitForFinished() ){
+			w.success = p.exitCode() == 0 ;
+			w.outPut  = p.readAll() ;
+		}else{
+			w.success = false ;
+		}
+
+		return w ;
 	} ;
 
 	auto _b = [&]( const weatherInfo& w ){
 
-		if( w.success() ){
+		if( w.success ){
 
 			QStringList l = w.outPut.split( splitter,QString::SkipEmptyParts ) ;
 
