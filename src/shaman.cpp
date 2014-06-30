@@ -130,7 +130,7 @@ void shaman::run()
 
 void shaman::updateInfo()
 {
-	const char * z = "<table><tr width=50 valign=middle><td>%1</td></table>" ;
+	const char * z = "<table><tr width=50 valign=middle><td>%1</td></tr></table>" ;
 	QString e = QString( z ).arg( tr( "updating ..." ) ) ;
 
 	statusicon::setToolTip( icon,tr( "status" ),e ) ;
@@ -162,7 +162,7 @@ void shaman::updateInfo()
 
 			for( const auto& it : l ){
 
-				table += QString( "<tr width=50 valign=middle><td>%1</td>" ).arg( it ) ;
+				table += QString( "<tr width=50 valign=middle><td>%1</td></tr>" ).arg( it ) ;
 			}
 
 			table += "</table>" ;
