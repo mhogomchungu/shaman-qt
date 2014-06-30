@@ -1,0 +1,10 @@
+
+Just start it up and start using it.
+
+The weather information is shown on a generated bubble when the application
+tray icon is moused over.
+
+Currently there is no GUI window to change application settings and hence they
+have to manually be set.Options can be set by running the application atleast
+once and then opening and set various settings in a config file located at:
+~/.config/shaman-qt/shaman-qt.conf
