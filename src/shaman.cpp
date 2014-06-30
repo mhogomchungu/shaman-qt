@@ -31,15 +31,15 @@
 #include <QSettings>
 #include <QCoreApplication>
 
-const char * cmd = "shaman -l Syracuse,US -i --format \"%I,%j\\011temp: %t F\\011low: %h F\\011high: %H F\\011%c\"" ;
+static const char * cmd = "shaman -l Syracuse,US -i --format \"%I,%j\\011temp: %t F\\011low: %h F\\011high: %H F\\011%c\"" ;
 
-const char * updateInterval = "20" ;
+static const char * updateInterval = "20" ;
 
-const char * splitter = "\\011" ;
+static const char * splitter = "\\011" ;
 
-const char * icon = "shaman-qt" ;
+static const char * icon = "shaman-qt" ;
 
-const char * appName = "shaman-qt" ;
+static const char * appName = "shaman-qt" ;
 
 #if USE_KDE_STATUS_NOTIFIER
 #include <kstandarddirs.h>
