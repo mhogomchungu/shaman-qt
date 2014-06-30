@@ -1,0 +1,7 @@
+
+ <!DOCTYPE RCC>
+ <RCC version="1.0">
+	 <qresource>
+		 <file>shaman-qt.png</file>
+	 </qresource>
+ </RCC>

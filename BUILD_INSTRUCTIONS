@@ -1,0 +1,41 @@
+
+
+1. build requirenments
+
+1.1 gcc-g++
+1.2 - libQt4-devel if building Qt4 tray application.
+    - libQt5-devel if building Qt5 tray application.
+    - KDE4-devel   if building KDE4 tray application.libQt4-devel is required for this build too.
+
+ps:
+Qt4 build is the default and hence does not need explicit option.
+
+How to build.
+
+download the source code and browse to the source folder and then run the following commands:
+
+2. To build Qt5 tray application,run:
+	mkdir build
+	cd build
+	cmake -DCMAKE_INSTALL_PREFIX=/usr/ -DCMAKE_BUILD_TYPE=RELEASE -DQT5=true ..
+	make
+	make install( or sudo make install )
+
+3. To build Qt4 tray application,run:
+	mkdir build
+	cd build
+	cmake -DCMAKE_INSTALL_PREFIX=/usr/ -DCMAKE_BUILD_TYPE=RELEASE ..
+	make
+	make install( or sudo make install )
+
+4.  To build KDE4 tray application,run:
+	mkdir build
+	cd build
+	cmake -DCMAKE_INSTALL_PREFIX=/usr/ -DCMAKE_BUILD_TYPE=RELEASE -DKDE4_SUPPORT=true ..
+	make
+	make install( or sudo make install )
+
+5.  To uninstall,run the following commanda as root from source folder
+	make uninstall
+
+
