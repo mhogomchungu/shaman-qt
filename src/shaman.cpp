@@ -111,36 +111,32 @@ static int _getUpdateInterval( void )
 
 #endif
 
-class getWeatherInfo
+struct weatherInfo
 {
-public:
-	getWeatherInfo()
-	{
-		QProcess p ;
-		p.start( _getShamanCmd() ) ;
-		m_completed = p.waitForFinished() ;
-		if( m_completed ){
-			m_exitCode   = p.exitCode() ;
-			m_exitStatus = p.exitStatus() ;
-			m_data       = p.readAll() ;
-		}else{
-			m_exitCode = 1 ;
-		}
-	}
 	bool success( void ) const
 	{
-		return m_exitCode == 0 ;
+		return exitCode == 0 ;
 	}
-	const QString& outPut( void ) const
-	{
-		return m_data ;
-	}
-private:
-	int  m_exitStatus ;
-	int  m_exitCode ;
-	bool m_completed ;
-	QString m_data ;
+	int  exitCode ;
+	bool completed ;
+	QString outPut ;
 };
+
+weatherInfo getWeatherInfo()
+{
+	weatherInfo w ;
+	QProcess p ;
+	p.start( _getShamanCmd() ) ;
+	w.completed = p.waitForFinished() ;
+	if( w.completed ){
+		w.exitCode   = p.exitCode() ;
+		w.outPut     = p.readAll() ;
+	}else{
+		w.exitCode = 1 ;
+	}
+
+	return w ;
+}
 
 shaman::shaman()
 {
@@ -182,11 +178,11 @@ void shaman::updateInfo()
 		return getWeatherInfo() ;
 	} ;
 
-	auto _b = [&]( const getWeatherInfo& info ){
+	auto _b = [&]( const weatherInfo& w ){
 
-		if( info.success() ){
+		if( w.success() ){
 
-			QStringList l = info.outPut().split( splitter,QString::SkipEmptyParts ) ;
+			QStringList l = w.outPut.split( splitter,QString::SkipEmptyParts ) ;
 
 			QString table = "<table>" ;
 
@@ -203,7 +199,7 @@ void shaman::updateInfo()
 		}
 	} ;
 
-	Task::run< getWeatherInfo >( _a ).then( _b ) ;
+	Task::run< weatherInfo >( _a ).then( _b ) ;
 }
 
 void shaman::configure()
