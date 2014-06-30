@@ -130,6 +130,11 @@ void shaman::run()
 
 void shaman::updateInfo()
 {
+	const char * z = "<table><tr width=50 valign=middle><td>%1</td></table>" ;
+	QString e = QString( z ).arg( tr( "updating ..." ) ) ;
+
+	statusicon::setToolTip( icon,tr( "status" ),e ) ;
+
 	auto _a = [](){
 
 		weatherInfo w ;
