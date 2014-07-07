@@ -18,6 +18,9 @@
  */
 
 #include "task.h"
+namespace LxQt{
+
+namespace Wallet{
 
 void Task::exec( std::function< void( void ) > function )
 {
@@ -26,6 +29,10 @@ void Task::exec( std::function< void( void ) > function )
 
 continuation_1& Task::run( std::function< void( void ) > function )
 {
-	auto t = new thread_1( function ) ;
+	auto t = new ThreadHelper_1( function ) ;
 	return t->taskContinuation() ;
+}
+
+}
+
 }

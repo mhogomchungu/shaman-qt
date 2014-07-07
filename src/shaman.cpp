@@ -31,6 +31,8 @@
 #include <QSettings>
 #include <QCoreApplication>
 
+namespace Task = LxQt::Wallet::Task ;
+
 static const char * cmd = "shaman -l Syracuse,US -i --format \"%I,%j\\011temp: %t F\\011low: %h F\\011high: %H F\\011%c\"" ;
 
 static const char * updateInterval = "20" ;
