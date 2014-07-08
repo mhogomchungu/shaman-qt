@@ -137,7 +137,7 @@ void shaman::updateInfo()
 
 	statusicon::setToolTip( icon,tr( "status" ),e ) ;
 
-	auto _a = [](){
+	Task::run< weatherInfo >( [](){
 
 		weatherInfo w ;
 
@@ -145,16 +145,20 @@ void shaman::updateInfo()
 		p.start( _getShamanCmd() ) ;
 
 		if( p.waitForFinished() ){
+
 			w.success = p.exitCode() == 0 ;
-			w.outPut  = p.readAll() ;
+
+			if( w.success ){
+
+				w.outPut = p.readAll() ;
+			}
 		}else{
 			w.success = false ;
 		}
 
 		return w ;
-	} ;
 
-	auto _b = [&]( const weatherInfo& w ){
+	} ).then( [ this ]( const weatherInfo& w ){
 
 		if( w.success ){
 
@@ -173,9 +177,7 @@ void shaman::updateInfo()
 		}else{
 			statusicon::setToolTip( icon,tr( "error" ),tr( "failed to fetch data" ) ) ;
 		}
-	} ;
-
-	Task::run< weatherInfo >( _a ).then( _b ) ;
+	} ) ;
 }
 
 void shaman::configure()
