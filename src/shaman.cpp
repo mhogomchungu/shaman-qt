@@ -31,8 +31,6 @@
 #include <QSettings>
 #include <QCoreApplication>
 
-namespace Task = LxQt::Wallet::Task ;
-
 static const char * cmd = "shaman -l Syracuse,US -i --format \"%I,%j\\011temp: %t F\\011low: %h F\\011high: %H F\\011%c\"" ;
 
 static const char * updateInterval = "20" ;
@@ -91,12 +89,6 @@ static int _getUpdateInterval( void )
 	}
 }
 
-struct weatherInfo
-{
-	bool success ;
-	QString outPut ;
-};
-
 shaman::shaman()
 {
 	statusicon::setCategory( statusicon::ApplicationStatus ) ;
@@ -137,32 +129,28 @@ void shaman::updateInfo()
 
 	statusicon::setToolTip( icon,tr( "status" ),e ) ;
 
-	Task::run< weatherInfo >( [](){
-
-		weatherInfo w ;
+	Task::run< QString >( [](){
 
 		QProcess p ;
 		p.start( _getShamanCmd() ) ;
 
 		if( p.waitForFinished() ){
 
-			w.success = p.exitCode() == 0 ;
+			if( p.exitCode() == 0 ){
 
-			if( w.success ){
-
-				w.outPut = p.readAll() ;
+				return QString( p.readAll() ) ;
+			}else{
+				return QString() ;
 			}
 		}else{
-			w.success = false ;
+			return QString() ;
 		}
 
-		return w ;
+	} ).then( [ this ]( const QString& s ){
 
-	} ).then( [ this ]( const weatherInfo& w ){
+		if( !s.isEmpty() ){
 
-		if( w.success ){
-
-			QStringList l = w.outPut.split( splitter,QString::SkipEmptyParts ) ;
+			QStringList l = s.split( splitter,QString::SkipEmptyParts ) ;
 
 			QString table = "<table>" ;
 

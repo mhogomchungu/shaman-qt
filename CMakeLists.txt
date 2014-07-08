@@ -38,7 +38,7 @@ if( QT5 )
 	QT5_WRAP_CPP( MOC src/statusicon.h src/shaman.h src/task.h )
 	QT5_ADD_RESOURCES( TRAY_RC_SRCS icons/icon.qrc )
 
-	add_executable( shaman-qt src/main.cpp src/shaman.cpp src/statusicon.cpp src/task.cpp ${MOC} ${TRAY_RC_SRCS} )
+	add_executable( shaman-qt src/main.cpp src/shaman.cpp src/statusicon.cpp ${MOC} ${TRAY_RC_SRCS} )
 
 	TARGET_LINK_LIBRARIES( shaman-qt ${Qt5Widgets_LIBRARIES} ${Qt5Core_LIBRARIES} )
 
@@ -51,7 +51,7 @@ else()
 	QT4_WRAP_CPP( MOC src/statusicon.h src/shaman.h src/task.h )
 	QT4_ADD_RESOURCES( TRAY_RC_SRCS icons/icon.qrc )
 
-	add_executable( shaman-qt src/main.cpp src/shaman.cpp src/statusicon.cpp src/task.cpp ${MOC} ${TRAY_RC_SRCS} )
+	add_executable( shaman-qt src/main.cpp src/shaman.cpp src/statusicon.cpp ${MOC} ${TRAY_RC_SRCS} )
 
 	if( KDE4_SUPPORT )
 		find_package( KDE4 REQUIRED )
