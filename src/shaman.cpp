@@ -147,7 +147,7 @@ void shaman::updateInfo()
 
 	} ).then( [ this ]( const QString& s ){
 
-		if( !s.isEmpty() ){
+		if( s.isEmpty() ){
 
 			statusicon::setToolTip( icon,tr( "error" ),tr( "failed to fetch data" ) ) ;
 		}else{
