@@ -125,9 +125,8 @@ void shaman::run()
 void shaman::updateInfo()
 {
 	const char * z = "<table><tr width=50 valign=middle><td>%1</td></tr></table>" ;
-	QString e = QString( z ).arg( tr( "updating ..." ) ) ;
 
-	statusicon::setToolTip( icon,tr( "status" ),e ) ;
+	statusicon::setToolTip( icon,tr( "status" ),QString( z ).arg( tr( "updating ..." ) ) ) ;
 
 	Task::run< QString >( [](){
 
@@ -150,6 +149,8 @@ void shaman::updateInfo()
 
 		if( !s.isEmpty() ){
 
+			statusicon::setToolTip( icon,tr( "error" ),tr( "failed to fetch data" ) ) ;
+		}else{
 			QStringList l = s.split( splitter,QString::SkipEmptyParts ) ;
 
 			QString table = "<table>" ;
@@ -162,8 +163,6 @@ void shaman::updateInfo()
 			table += "</table>" ;
 
 			statusicon::setToolTip( icon,tr( "status" ),table ) ;
-		}else{
-			statusicon::setToolTip( icon,tr( "error" ),tr( "failed to fetch data" ) ) ;
 		}
 	} ) ;
 }
