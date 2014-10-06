@@ -1,6 +1,6 @@
 /*
  * copyright: 2014
- * name : mhogo mchungu
+ * name : Francis Banyikwa
  * email: mhogomchungu@gmail.com
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,34 @@
 #ifndef __TASK_H_INCLUDED__
 #define __TASK_H_INCLUDED__
 
+#include <utility>
+#include <future>
 #include <functional>
 #include <QThread>
+#include <QEventLoop>
+
+/*
+ *
+ * Examples on how to use the library are at the end of this file.
+ *
+ */
+
+/*
+ * This library wraps a function into a future where the result of the function
+ * can be retrieved through the future's 3 public methods:
+ *
+ * 1. .get() runs the wrapped function on the current thread.
+ *
+ * 2. .then() registers an event to be called when the wrapped function finishes
+ *            and then runs the wrapped function in a different thread.
+ *
+ * 3. .await() suspends the calling function and then runs the wrapped function
+ *             in a separate thread and then unsuspends the calling function when
+ *             the wrapped function finish running.The suspension will be done
+ *             without blocking the current thread leaving free to perform other tasks.
+ *
+ *             recommending reading up on C#'s await keyword to get a sense of how this feature works.
+ */
 
 namespace Task
 {
@@ -58,71 +84,117 @@ namespace Task
 	class future
 	{
 	public:
-		future() : m_function( []( const T& t ){ Q_UNUSED( t ) ; } )
+		future( std::function< void() > start,
+			std::function< void() > cancel,
+			std::function< void( T& ) > get )
 		{
+			m_start  = std::move( start ) ;
+			m_cancel = std::move( cancel ) ;
+			m_get    = std::move( get ) ;
 		}
-		void setStartFunction( std::function< void( void ) > function )
+		void then( std::function< void( T ) > function )
 		{
-			m_start = function ;
-		}
-		void then( std::function< void( const T& ) > function )
-		{
-			m_function = function ;
+			m_function = std::move( function ) ;
 			m_start() ;
+		}
+		T get()
+		{
+			T r ;
+			m_get( r ) ;
+			return r ;
+		}
+		T await()
+		{
+			QEventLoop p ;
+
+			T q ;
+
+			m_function = [ & ]( T r ){ q = std::move( r ) ; p.exit() ; } ;
+
+			m_start() ;
+
+			p.exec() ;
+
+			return q ;
 		}
 		void start()
 		{
 			m_start() ;
 		}
-		void run( const T& arg )
+		void cancel()
 		{
-			m_function( arg ) ;
+			m_cancel() ;
+		}
+		void run( T r )
+		{
+			m_function( std::move( r ) ) ;
 		}
 	private:
-		std::function< void( const T& ) > m_function ;
-		std::function< void( void ) > m_start ;
+		std::function< void( T ) > m_function = []( T t ){ Q_UNUSED( t ) ; } ;
+		std::function< void() > m_start ;
+		std::function< void() > m_cancel ;
+		std::function< void( T& ) > m_get ;
 	};
 
 	template< typename T >
 	class ThreadHelper : public Thread
 	{
 	public:
-		ThreadHelper( std::function< T ( void ) > function ) : m_function( function )
+		ThreadHelper( std::function< T() > function ) :
+			m_function( std::move( function ) ),
+			m_future( [ this ](){ this->start() ; },
+				  [ this ](){ this->deleteLater() ; },
+				  [ this ]( T& r ){ r = m_function() ; this->deleteLater() ; } )
 		{
 		}
-		future<T>& taskContinuation( void )
+		future<T>& Future( void )
 		{
-			m_future.setStartFunction( [&](){ this->start() ; } ) ;
 			return m_future ;
 		}
 	private:
 		~ThreadHelper()
 		{
-			m_future.run( m_cargo ) ;
+			m_future.run( std::move( m_result ) ) ;
 		}
 		void run( void )
 		{
-			m_cargo =  m_function() ;
+			m_result =  m_function() ;
 		}
-		std::function< T ( void ) > m_function ;
+		std::function< T() > m_function ;
 		future<T> m_future ;
-		T m_cargo ;
+		T m_result ;
 	};
 
-	class future_1
+	template<>
+	class future< void >
 	{
 	public:
-		future_1() : m_function( [](){} )
+		future( std::function< void() > start,
+			std::function< void() > cancel,
+			std::function< void() > get )
 		{
+			m_start  = std::move( start ) ;
+			m_cancel = std::move( cancel ) ;
+			m_get    = std::move( get ) ;
 		}
-		void setStartFunction( std::function< void( void ) > function )
+		void then( std::function< void() > function )
 		{
-			m_start = function ;
-		}
-		void then( std::function< void( void ) > function )
-		{
-			m_function = function ;
+			m_function = std::move( function ) ;
 			m_start() ;
+		}
+		void get()
+		{
+			m_get() ;
+		}
+		void await()
+		{
+			QEventLoop p ;
+
+			m_function = [ & ](){ p.exit() ; } ;
+
+			m_start() ;
+
+			p.exec() ;
 		}
 		void start()
 		{
@@ -132,24 +204,34 @@ namespace Task
 		{
 			m_function() ;
 		}
+		void cancel()
+		{
+			m_cancel() ;
+		}
 	private:
-		std::function< void( void ) > m_function ;
-		std::function< void( void ) > m_start ;
+		std::function< void() > m_function = [](){} ;
+		std::function< void() > m_start ;
+		std::function< void() > m_cancel ;
+		std::function< void() > m_get ;
 	};
 
-	class ThreadHelper_1 : public Thread
+	template<>
+	class ThreadHelper< void > : public Thread
 	{
 	public:
-		ThreadHelper_1( std::function< void ( void ) > function ) : m_function( function )
+		ThreadHelper( std::function< void() > function ) :
+			m_function( std::move( function ) ),
+			m_future( [ this ](){ this->start() ; },
+				  [ this ](){ this->deleteLater() ; },
+				  [ this ](){ m_function() ; this->deleteLater() ; } )
 		{
 		}
-		future_1& taskContinuation( void )
+		future< void >& Future( void )
 		{
-			m_future.setStartFunction( [&](){ this->start() ; } ) ;
 			return m_future ;
 		}
 	private:
-		~ThreadHelper_1()
+		~ThreadHelper()
 		{
 			m_future.run() ;
 		}
@@ -157,96 +239,144 @@ namespace Task
 		{
 			m_function() ;
 		}
-		std::function< void ( void ) > m_function ;
-		future_1 m_future ;
+		std::function< void() > m_function ;
+		future< void > m_future ;
 	};
 
 	/*
-	 * This API runs two tasks,the first one will be run in a different thread and
-	 * the second one will be run on the original thread after the completion of the
-	 * first one.
-	 *
-	 * See example at the end of this header file for a sample use case
+	 * Below API's wrappes a function around a future and then returns the future.
 	 */
 	template< typename T >
-	future<T>& run( std::function< T ( void ) > function )
+	future<T>& run( std::function< T() > function )
 	{
-		auto t = new ThreadHelper<T>( function ) ;
-		return t->taskContinuation() ;
+		auto t = new ThreadHelper<T>( std::move( function ) ) ;
+		return t->Future() ;
 	}
 
-	static inline future_1& run( std::function< void( void ) > function )
+	static inline future< void >& run( std::function< void() > function )
 	{
-		auto t = new ThreadHelper_1( function ) ;
-		return t->taskContinuation() ;
+		auto t = new ThreadHelper< void >( std::move( function ) ) ;
+		return t->Future() ;
 	}
 
-	static inline void exec( std::function< void( void ) > function )
+	/*
+	 * A few useful helper functions
+	 */
+
+	static inline void await( Task::future<void>& e )
 	{
-		Task::run( function ).start() ;
+		e.await() ;
+	}
+
+	static inline void await( std::function< void() > function )
+	{
+		Task::run( std::move( function ) ).await() ;
+	}
+
+	template< typename T >
+	T await( std::function< T() > function )
+	{
+		return Task::run<T>( std::move( function ) ).await() ;
+	}
+
+	template< typename T >
+	T await( Task::future<T>& e )
+	{
+		return e.await() ;
+	}
+
+	template< typename T >
+	T await( std::future<T>&& t )
+	{
+		return Task::await<T>( [ & ](){ return t.get() ; } ) ;
+	}
+
+	/*
+	 * This method runs its argument in a separate thread and does not offer
+	 * continuation feature.Useful when wanting to just run a function in a
+	 * different thread.
+	 */
+	static inline void exec( std::function< void() > function )
+	{
+		Task::run( std::move( function ) ).start() ;
 	}
 }
 
+#if 0 // start example block
 
-#if 0
+Examples on how to use the library
 
-/*
- * templated version that passes a return value of one function to another function
- */
+**********************************************************
+* Example use cases on how to use Task::run().then() API
+**********************************************************
+
+templated version that passes a return value of one function to another function
+---------------------------------------------------------------------------------
+
 auto _a = [](){
 	/*
-	 * task _a does what task _a does here.
-	 *
-	 * This function body will run on a different thread
-	 *
-	 * Note that this function returns an argument.
+	 * This task will run on a different thread
+	 * This tasks returns a result
 	 */
 	return 0 ;
 }
 
-auto _b = []( const int& r ){
+auto _b = []( int r ){
 	/*
-	 * task _b does what task _b does here.
-	 *
-	 * Note that this function requires an argument that matches the returned argument type of _a
-	 *
-	 * r is a const reference to a value returned by _a
-	 *
-	 * This function body will run on the original thread
+	 * This task will run on the original thread.
+	 * This tasks takes an argument returned by task _a
 	 */
 }
 
 Task::run<int>( _a ).then( _b ) ;
 
-/*
- * Non templated version that does not pass around return value
- */
-auto _a = [](){
+alternatively,
+
+Task::future<int>& e = Task::run( _a ) ;
+
+e.then( _b ) ;
+
+
+Non templated version that does not pass around return value
+----------------------------------------------------------------
+auto _c = [](){
 	/*
-	 * task _a does what task _a does here.
-	 *
-	 * This function body will run on a different thread
-	 *
-	 * Note that this function returns no argument
+	 * This task will run on a different thread
+	 * This tasks returns with no result
 	 */
 }
 
-auto _b = [](){
+auto _d = [](){
 	/*
-	 * task _b does what task _b does here.
-	 *
-	 * Note that this function requires no argument.
-	 * This function body will run on the original thread
+	 * This task will run on the original thread.
+	 * This tasks takes no argument
 	 */
 }
 
-Task::run( _a ).then( _b ) ;
+Task::run( _c ).then( _d ) ;
 
-/*
- * if no continuation
- */
-Task::exec( _a ) ;
+alternatively,
 
-#endif
+Task::future<void>& e = Task::run( _c ) ;
+
+e.then( _d ) ;
+
+**********************************************************
+* Example use cases on how to use Task::run().await() API
+**********************************************************
+
+int r = Task::await<int>( _a ) ;
+
+alternatively,
+
+Task::future<int>& e = Task::run<int>( _a ) ;
+
+int r = e.await() ;
+
+alternatively,
+
+int r = Task::run<int>( _a ).await() ;
+
+#endif //end example block
 
 #endif //__TASK_H_INCLUDED__
